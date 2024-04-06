@@ -72,7 +72,7 @@ const LOAN_FORM_SOURCE = `<!DOCTYPE html>
   <body>
     <article>
       <h1>Loan Calculator</h1>
-      <form action="/loan-offer" method="get">
+      <form action="/loan-offer" method="post">
         <p>All loans are offered at an APR of {{apr}}%.</p>
         <label for="amount">How much do you want to borrow (in dollars)?</label>
         <input type="number" name="amount" id="amount" value="">
@@ -165,7 +165,35 @@ const SERVER = HTTP.createServer((req, res) => {
       res.write(`${data}\n`);
       res.end();
     } else {
+      const method = req.method;
+      if (method === 'GET' && pathname === '/') {
+        let content = render(LOAN_FORM_TEMPLATE, {apr : APR});
 
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/html');
+        res.write(`${content}\n`);
+        res.end();
+      } else if (method === 'GET' && pathname === '/loan-offer') {
+        let content = render(LOAN_OFFER_TEMPLATE, {apr: APR});
+
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/html');
+        res.write(`${content}\n`);
+        res.end();
+      } else if (method === 'POST' && pathname === '/loan-offer') {
+        parseFormData(req, parsedData => {
+          let data = createLoanOffer(parsedData);
+          let content = render(LOAN_OFFER_TEMPLATE, data);
+
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'text/html');
+          res.write(`${content}\n`);
+          res.end();
+        });
+      } else {
+        res.statusCode = 404;
+        res.end();
+      }
     }
   });
 });
